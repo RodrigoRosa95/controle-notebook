@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { --fundo:#0f1115; --cartao:#181b22; --borda:#262a34; --texto:#e6e8ee; --fraco:#8a90a0;
+          --verde:#3ecf8e; --amarelo:#f5b544; --vermelho:#ef5a5a; --azul:#5aa9ef; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; min-height:100vh; background:var(--fundo); color:var(--texto);
+         font:clamp(14px,3.8vw,17px)/1.45 system-ui,Roboto,sans-serif; user-select:none;
+         padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); }
+  .tudo { max-width:980px; margin:0 auto; display:grid; gap:14px; grid-template-columns:1fr; }
+  @media (orientation:landscape) and (min-width:640px) { .tudo { grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; } }
+  h1 { font-size:clamp(18px,5vw,24px); margin:4px 2px 0; grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .engr { background:none; border:0; color:var(--fraco); font-size:22px; padding:6px; }
+  .cartao { background:var(--cartao); border:1px solid var(--borda); border-radius:18px; padding:clamp(14px,4vw,22px); min-width:0; }
+  .rot { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--fraco); font-weight:600; margin-bottom:10px; }
+  .status { display:flex; align-items:center; gap:14px; }
+  .bola { width:clamp(46px,13vw,64px); height:clamp(46px,13vw,64px); border-radius:50%; flex:none; display:grid; place-items:center;
+          font-size:clamp(22px,6vw,30px); background:#232733; transition:background .3s; }
+  .bola.on { background:rgba(62,207,142,.18); box-shadow:0 0 0 2px var(--verde) inset; }
+  .bola.off { background:rgba(239,90,90,.14); box-shadow:0 0 0 2px var(--vermelho) inset; }
+  .bola.esp { background:rgba(245,181,68,.14); box-shadow:0 0 0 2px var(--amarelo) inset; animation:p 1.2s infinite; }
+  @keyframes p { 50% { opacity:.45; } }
+  .grande { font-size:clamp(20px,5.5vw,26px); font-weight:700; }
+  .fraco { color:var(--fraco); font-size:.9em; overflow-wrap:anywhere; }
+  .assist { margin-top:12px; font-size:.9em; }
+  .assist div { padding:6px 0; border-top:1px solid var(--borda); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .botoes { display:grid; gap:10px; grid-template-columns:1fr 1fr; }
+  button.b { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:clamp(84px,24vw,112px);
+             border:1px solid var(--borda); border-radius:16px; background:#1f232c; color:var(--texto); font:inherit; font-weight:600;
+             padding:10px; transition:transform .08s, opacity .2s; }
+  button.b:active { transform:scale(.97); }
+  button.b:disabled { opacity:.35; }
+  button.b .ic { font-size:clamp(26px,7vw,34px); line-height:1; }
+  .ligar { background:rgba(62,207,142,.14) !important; border-color:rgba(62,207,142,.5) !important; }
+  .deslig { background:rgba(239,90,90,.13) !important; border-color:rgba(239,90,90,.5) !important; }
+  .largo { grid-column:1/-1; }
+  .aviso { margin-top:10px; padding:10px 12px; border-radius:12px; background:#20242e; font-size:.9em; display:none; }
+  .aviso.ver { display:block; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; padding:18px; z-index:5; }
+  .modal.ver { display:flex; }
+  .modal .cartao { width:100%; max-width:420px; }
+  .modal h2 { margin:0 0 8px; font-size:1.15em; }
+  .linha2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .linha2 button { padding:14px; border-radius:12px; border:0; font:inherit; font-weight:600; }
+  .cinza { background:#2a2f3a; color:var(--texto); }
+  .verm { background:var(--vermelho); color:#fff; }
+  .azul { background:var(--azul); color:#04121f; }
+  input { width:100%; margin:8px 0 0; padding:12px; border-radius:10px; border:1px solid var(--borda); background:#0b0d11; color:var(--texto); font:inherit; user-select:text; }
+</style>
+</head>
+<body>
+<div class="tudo">
+  <h1><span>💻 Notebook</span><button class="engr" onclick="abrirConfig()" aria-label="Configurações">⚙️</button></h1>
+
+  <section class="cartao">
+    <div class="rot">Estado</div>
+    <div class="status">
+      <div class="bola esp" id="bola">…</div>
+      <div style="min-width:0">
+        <div class="grande" id="titulo">Verificando…</div>
+        <div class="fraco" id="detalhe">procurando o notebook na rede</div>
+      </div>
+    </div>
+    <div class="assist" id="assist"></div>
+    <div class="aviso" id="aviso"></div>
+  </section>
+
+  <section class="cartao">
+    <div class="rot">Energia</div>
+    <div class="botoes">
+      <button class="b ligar" id="bLigar" onclick="ligar()"><span class="ic">⚡</span>Ligar</button>
+      <button class="b deslig" id="bDesligar" onclick="perguntarDesligar()" disabled><span class="ic">⏻</span>Desligar</button>
+    </div>
+    <div class="rot" style="margin-top:18px">Tela do notebook</div>
+    <div class="botoes">
+      <button class="b" id="bTelaOff" onclick="tela('desligar')" disabled><span class="ic">🌑</span>Apagar tela</button>
+      <button class="b" id="bTelaOn" onclick="tela('ligar')" disabled><span class="ic">🖥️</span>Acender tela</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="mDesligar">
+  <div class="cartao">
+    <h2>Desligar o notebook?</h2>
+    <div class="fraco" id="mTexto">O Jellyfin, os downloads e o Home Assistant param. A VM do HA e o HD de 4 TB são desligados com segurança.</div>
+    <div class="linha2"><button class="cinza" onclick="fechar('mDesligar')">Cancelar</button>
+      <button class="verm" onclick="desligar()">Desligar</button></div>
+  </div>
+</div>
+
+<div class="modal" id="mConfig">
+  <div class="cartao">
+    <h2>Endereço do notebook</h2>
+    <div class="fraco">IP na rede de casa ou do Tailscale. Ex.: 192.168.1.50 (casa) ou o IP do Tailscale.</div>
+    <input id="host" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="fraco" style="margin-top:12px" id="macInfo"></div>
+    <div class="linha2"><button class="cinza" onclick="fechar('mConfig')">Fechar</button>
+      <button class="azul" onclick="salvarHost()">Salvar</button></div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let online = null, ligandoDesde = 0, desligandoDesde = 0, timer = null, monitor = '';
+
+  function tempo(s) { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+    return h >= 24 ? Math.floor(h / 24) + ' d ' + (h % 24) + ' h' : h ? h + ' h ' + m + ' min' : m + ' min'; }
+  function aviso(txt, cor) { const a = $('aviso'); a.textContent = txt || ''; a.style.color = cor || ''; a.classList.toggle('ver', !!txt); }
+  function vibrar() { try { App.vibrar(); } catch (e) {} }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function pintar(estado, titulo, detalhe) {
+    $('bola').className = 'bola ' + estado;
+    $('bola').textContent = estado === 'on' ? '✓' : estado === 'off' ? '⏻' : '…';
+    $('titulo').textContent = titulo; $('detalhe').textContent = detalhe;
+  }
+
+  window.aoEstado = function (txt) {
+    const d = JSON.parse(txt), agora = Date.now();
+    online = !!d.online;
+    if (online) {
+      if (desligandoDesde && agora - desligandoDesde < 90000) {
+        pintar('esp', 'Desligando…', 'aguardando o notebook apagar');
+      } else {
+        desligandoDesde = 0;
+        if (ligandoDesde) { ligandoDesde = 0; aviso('✅ O notebook ligou!', 'var(--verde)'); vibrar(); }
+        monitor = d.monitor;
+        pintar('on', 'Ligado', 'há ' + tempo(d.ligado_ha) + ' · carga ' + d.carga + ' · tela ' + d.monitor + ' · ' + d.host);
+      }
+      $('assist').innerHTML = (d.assistindo || []).length
+        ? '<div class="fraco" style="border:0">▶️ Assistindo no Jellyfin agora:</div>' + d.assistindo.map(a => '<div>' + esc(a) + '</div>').join('')
+        : '';
+    } else {
+      $('assist').innerHTML = '';
+      if (desligandoDesde) { desligandoDesde = 0; aviso('✅ Notebook desligado.', 'var(--verde)'); vibrar(); }
+      if (ligandoDesde && agora - ligandoDesde < 240000) {
+        pintar('esp', 'Ligando…', 'pode levar 1 a 2 minutos (' + Math.round((agora - ligandoDesde) / 1000) + ' s)');
+      } else {
+        if (ligandoDesde) { ligandoDesde = 0; aviso('⚠️ Não ligou. Fora de casa o sinal vai pela TV box (Tailscale ligado no celular e a box ligada); confira também se o notebook está no cabo e na tomada.', 'var(--amarelo)'); }
+        pintar('off', 'Desligado', 'ou fora de alcance — ' + (d.erro || 'sem resposta'));
+      }
+    }
+    $('bDesligar').disabled = !online || !!desligandoDesde;
+    $('bTelaOff').disabled = !online || monitor === 'desligado';
+    $('bTelaOn').disabled = !online;
+    $('bLigar').disabled = online === true && !desligandoDesde;
+  };
+
+  window.aoResposta = function (caminho, txt) {
+    let d = {}; try { d = JSON.parse(txt); } catch (e) {}
+    if (caminho === '/desligar') {
+      if (d.ok) { desligandoDesde = Date.now(); aviso('⏻ Desligando em 5 segundos…', 'var(--amarelo)'); vibrar(); }
+      else aviso('❌ ' + (d.erro || 'falhou'), 'var(--vermelho)');
+    } else {
+      aviso(d.ok ? (caminho.endsWith('desligar') ? '🌑 Tela apagada. Mexer no mouse do notebook acende de novo.' : '🖥️ Tela acesa.') : '❌ ' + (d.erro || 'falhou'),
+            d.ok ? '' : 'var(--vermelho)');
+    }
+    atualizar();
+  };
+
+  window.aoLigar = function (r, via) {
+    if (r === 'ok') { ligandoDesde = Date.now(); aviso(via === 'box' ? '⚡ Sinal de ligar enviado pela TV box de casa.' : '⚡ Sinal de ligar enviado (Wake-on-LAN).', ''); vibrar(); atualizar(); }
+    else aviso('❌ Não consegui mandar o sinal: ' + r, 'var(--vermelho)');
+  };
+
+  function atualizar() { try { App.estado(); } catch (e) {} }
+  function ligar() { aviso('Enviando sinal…'); App.ligar(); }
+  function tela(acao) { vibrar(); App.acao('/monitor/' + acao, '{}'); }
+  function perguntarDesligar() {
+    const n = $('assist').querySelectorAll('div').length - 1;
+    $('mTexto').innerHTML = (n > 0 ? '<b style="color:var(--amarelo)">⚠️ ' + n + ' pessoa(s) assistindo no Jellyfin agora.</b><br><br>' : '')
+      + 'O Jellyfin, os downloads e o Home Assistant param. A VM do HA e o HD de 4 TB são desligados com segurança.';
+    $('mDesligar').classList.add('ver');
+  }
+  function desligar() { fechar('mDesligar'); App.acao('/desligar', '{"confirmar": true}'); }
+  function fechar(id) { $(id).classList.remove('ver'); }
+  function abrirConfig() { $('host').value = App.host(); $('macInfo').textContent = 'Wake-on-LAN para o MAC ' + App.mac() + ' (cabo do notebook).'; $('mConfig').classList.add('ver'); }
+  function salvarHost() { App.definirHost($('host').value); fechar('mConfig'); pintar('esp', 'Verificando…', 'novo endereço'); atualizar(); }
+
+  window.aoVoltar = atualizar;
+  function ciclo() { if (!document.hidden) atualizar(); timer = setTimeout(ciclo, ligandoDesde || desligandoDesde ? 3000 : 5000); }
+  ciclo();
+</script>
+</body>
+</html>

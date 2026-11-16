@@ -1,0 +1,7 @@
+{
+  "token": "COLE_AQUI_O_TOKEN_DO_SERVIDOR",
+  "mac": "AA:BB:CC:DD:EE:FF",
+  "broadcast": "192.168.1.255",
+  "hosts": ["192.168.1.50", "100.x.y.z"],
+  "box": []
+}

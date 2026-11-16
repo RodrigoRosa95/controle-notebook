@@ -1,0 +1,6 @@
+*.apk
+app/assets/config.json
+__pycache__/
+*.jks
+senha
+token
